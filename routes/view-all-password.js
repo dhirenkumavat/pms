@@ -14,7 +14,12 @@ var getAllPass= passModel.find({});
 function checkLoginUser(req,res,next){
   var userToken=localStorage.getItem('userToken');
   try {
-    var decoded = jwt.verify(userToken, 'loginToken');
+    if(req.session.userName){
+      var decoded = jwt.verify(userToken, 'loginToken');
+    }else{
+      res.redirect('/');
+    }
+    
   } catch(err) {
     res.redirect('/');
   }
@@ -52,7 +57,7 @@ if (typeof localStorage === "undefined" || localStorage === null) {
 /*--------------------Routing----------------------------*/
 /* Get view-all-password page. */
 router.get('/',checkLoginUser, function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var perPage = 3;
     var page = req.params.page || 1;
   
@@ -66,7 +71,7 @@ router.get('/',checkLoginUser, function(req, res, next) {
     })
   });
   router.get('/:page',checkLoginUser, function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var perPage = 3;
     var page = req.params.page || 1;
   

@@ -2,7 +2,12 @@ var express = require('express');
 var router = express.Router();
 var  bcrypt = require("bcrypt")
 var jwt = require('jsonwebtoken');
+var multer  = require('multer');
+var path = require ('path');
+
+
 const { check, validationResult } = require('express-validator');
+router.use(express.static(__dirname+"./public/"));
 /*--------------------DataBase Modules----------------------------*/
 var userModule=require('../modules/user');
 var passModel = require('../modules/add_password');
@@ -14,7 +19,12 @@ var getAllPass= passModel.find({});
 function checkLoginUser(req,res,next){
   var userToken=localStorage.getItem('userToken');
   try {
-    var decoded = jwt.verify(userToken, 'loginToken');
+    if(req.session.userName){
+      var decoded = jwt.verify(userToken, 'loginToken');
+    }else{
+      res.redirect('/');
+    }
+    
   } catch(err) {
     res.redirect('/');
   }
@@ -49,6 +59,19 @@ if (typeof localStorage === "undefined" || localStorage === null) {
   var LocalStorage = require('node-localstorage').LocalStorage;
   localStorage = new LocalStorage('./scratch');
 }
+
+//File Upload in Multer
+var Storage=multer.diskStorage({
+  destination:"./public/upload",
+  filename:(req,file,cd)=>{
+    cd(null,file.fieldname+"_"+ Date.now()+path.extname(file.originalname));
+
+  }
+})
+
+var upload =multer({
+  storage:Storage
+}).single('avatar');
 /*--------------------Routing----------------------------*/
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -76,6 +99,7 @@ router.post('/', function(req, res, next) {
       var token = jwt.sign({ userID: getUserID }, 'loginToken');
       localStorage.setItem('userToken', token);
       localStorage.setItem('loginUser', username);
+      req.session.userName=username;
       res.redirect('/dashboard');
     }else{
       res.render('index', { title: 'Password Management System', msg:"Invalid Username and Password." });
@@ -87,7 +111,7 @@ router.post('/', function(req, res, next) {
 /* GET signup page. */
 router.get('/signup', function(req, res, next) {
   var loginUser=localStorage.getItem('loginUser');
-  if(loginUser){
+  if(req.session.userName){
     res.redirect('./dashboard');
   }else{
   res.render('signup', { title: 'Password Management System',msg:'' });
@@ -100,7 +124,8 @@ router.post('/signup',checkUsername,checkEmail,function(req, res, next) {
   var email=req.body.email;
   var password=req.body.password;
   var confpassword=req.body.confpassword;
-  if(password !=confpassword){
+ 
+if(password !=confpassword){
     res.render('signup', { title: 'Password Management System', msg:'Password not matched!' });
     }else{
 password =bcrypt.hashSync(req.body.password,10);

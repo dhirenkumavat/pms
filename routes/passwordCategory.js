@@ -14,7 +14,12 @@ var getAllPass= passModel.find({});
 function checkLoginUser(req,res,next){
   var userToken=localStorage.getItem('userToken');
   try {
-    var decoded = jwt.verify(userToken, 'loginToken');
+    if(req.session.userName){
+      var decoded = jwt.verify(userToken, 'loginToken');
+    }else{
+      res.redirect('/');
+    }
+    
   } catch(err) {
     res.redirect('/');
   }
@@ -53,7 +58,7 @@ if (typeof localStorage === "undefined" || localStorage === null) {
 
 /* GET passwordCategory page. */
 router.get('/',checkLoginUser, function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     getPassCat.exec(function(err,data){
       if(err) throw err;
       res.render('password_category', { title: 'Password Management System',loginUser:loginUser,records:data});
@@ -62,7 +67,7 @@ router.get('/',checkLoginUser, function(req, res, next) {
   });
    /* Edit Get By Id password Category page. */
   router.get('/edit/:id', checkLoginUser,function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var passcat_id=req.params.id;
     var getpassCategory=passCatModel.findById(passcat_id);
     getpassCategory.exec(function(err,data){
@@ -74,7 +79,7 @@ router.get('/',checkLoginUser, function(req, res, next) {
    /* Update By Id passwordCategory page. */
   
   router.post('/edit/', checkLoginUser,function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var passcat_id=req.body.id;
     var passwordCategory=req.body.passwordCategory;
    var update_passCat= passCatModel.findByIdAndUpdate(passcat_id,{passord_category:passwordCategory});
@@ -86,7 +91,7 @@ router.get('/',checkLoginUser, function(req, res, next) {
   
   /* Delete passwordCategory page. */
   router.get('/delete/:id', checkLoginUser,function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var passcat_id=req.params.id;
      var passdelete=passCatModel.findByIdAndDelete(passcat_id);
     passdelete.exec(function(err){

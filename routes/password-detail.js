@@ -14,7 +14,12 @@ var getAllPass= passModel.find({});
 function checkLoginUser(req,res,next){
   var userToken=localStorage.getItem('userToken');
   try {
-    var decoded = jwt.verify(userToken, 'loginToken');
+    if(req.session.userName){
+      var decoded = jwt.verify(userToken, 'loginToken');
+    }else{
+      res.redirect('/');
+    }
+    
   } catch(err) {
     res.redirect('/');
   }
@@ -57,7 +62,7 @@ router.get('/',checkLoginUser, function(req, res, next) {
   });
   /* Get Edit edit_password_detail page */
   router.get('/edit/:id',checkLoginUser, function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var id =req.params.id;
     var getPassDetails=passModel.findById({_id:id});
     getPassDetails.exec(function(err,data){
@@ -69,7 +74,7 @@ router.get('/',checkLoginUser, function(req, res, next) {
   });
   /* Post Update edit_password_detail page */
   router.post('/edit/:id',checkLoginUser, function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var id =req.params.id;
     var passcat= req.body.pass_cat;
     var project_name= req.body.project_name;
@@ -87,7 +92,7 @@ router.get('/',checkLoginUser, function(req, res, next) {
   });
   /* Get Delete view-all-password page */
   router.get('/delete/:id', checkLoginUser,function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     var id =req.params.id;
     var passdelete=passModel.findByIdAndDelete(id);
     passdelete.exec(function(err){

@@ -14,7 +14,12 @@ var getAllPass= passModel.find({});
 function checkLoginUser(req,res,next){
   var userToken=localStorage.getItem('userToken');
   try {
-    var decoded = jwt.verify(userToken, 'loginToken');
+    if(req.session.userName){
+      var decoded = jwt.verify(userToken, 'loginToken');
+    }else{
+      res.redirect('/');
+    }
+    
   } catch(err) {
     res.redirect('/');
   }
@@ -53,12 +58,12 @@ if (typeof localStorage === "undefined" || localStorage === null) {
 
 /* GET Add New Password page. */
 router.get('/',checkLoginUser, function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
   res.render('addNewCategory', { title: 'Password Management System',loginUser:loginUser,errors:'',success:''});
   });
 /* POST Add New Password  page. */
 router.post('/',checkLoginUser,[ check('passwordCategory','Enter Password Category Name').isLength({ min: 1 })],function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
+    var loginUser=req.session.userName;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
     res.render('addNewCategory', { title: 'Password Management System',loginUser: loginUser, errors:errors.mapped(),success:''});

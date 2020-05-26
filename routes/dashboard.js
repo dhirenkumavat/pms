@@ -14,7 +14,12 @@ var getAllPass= passModel.find({});
 function checkLoginUser(req,res,next){
   var userToken=localStorage.getItem('userToken');
   try {
-    var decoded = jwt.verify(userToken, 'loginToken');
+    if(req.session.userName){
+      var decoded = jwt.verify(userToken, 'loginToken');
+    }else{
+      res.redirect('/');
+    }
+    
   } catch(err) {
     res.redirect('/');
   }
@@ -52,8 +57,11 @@ if (typeof localStorage === "undefined" || localStorage === null) {
 /*--------------------Routing----------------------------*/
 /* GET dashboard page. */
 router.get('/',checkLoginUser,function(req, res, next) {
-    var loginUser=localStorage.getItem('loginUser');
-  res.render('dashboard', { title: 'Password Management System',loginUser:loginUser });
+    var loginUser=req.session.userName;
+    passModel.countDocuments({}).exec((err,count)=>{
+      passCatModel.countDocuments({}).exec((err,countasscat)=>{    
+  res.render('dashboard', { title: 'Password Management System',loginUser:loginUser,msg:'',totalPassword:count, totalPassCat:countasscat });
   });
-
+});
+});
   module.exports = router;
